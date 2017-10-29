@@ -11,6 +11,13 @@ import copy
 from computeAvailableActions import computeAvailableActions
 from rewards import *
 
+def invertDictVarVals(dict2invert):
+    # NOTE: Python3
+    inverseDict = {v: k for k, v in dict2invert.items()}
+    # NOTE: Python2.7
+    #inverseDict = {v: k for k, v in dict2invert.iteritems()}
+    return inverseDict
+
 ################################################################
 ## INITIALIZE GAME
 ################################################################
@@ -32,7 +39,7 @@ def initializeGame(numTeamMembers, difficultyLevel, numStartingCards, debugLevel
     ## DEFINE CITIES
     ################################################################
     cityNames = {'SanFrancisco':1,'Chicago':2, 'Atlanta':3, 'Montreal':4, 'Washington':5, 'NewYork':6, 'Madrid':7, 'London':8, 'Paris':9, 'Essen':10, 'Milan':11, 'StPetersburg':12,'LosAngeles':13, 'MexicoCity':14, 'Lima':15, 'Santiago':16, 'Bogota':17, 'Miami':18, 'BuenosAires': 19, 'SaoPaulo':20, 'Lagos':21, 'Kinsasha':22, 'Khartoum':23, 'Johannesburg':24, 'Algiers': 25, 'Cairo':26, 'Istanbul':27, 'Moscow':28, 'Baghdad': 29, 'Riyadh': 30, 'Tehran': 31, 'Karachi':32, 'Mumbai': 33, 'Delhi':34, 'Chennai':35, 'Kolkata':36, 'Bangkok': 37, 'Jakarta': 38, 'Beijing': 39, 'HongKong': 40, 'HoChiMinhCity': 41, 'Shanghai': 42, 'Taipei': 43, 'Manila': 44, 'Seoul': 45, 'Osaka': 46, 'Tokyo': 47, 'Sydney': 48}
-    indexedCities = dict((v,k) for k,v in cityNames.iteritems())
+    indexedCities = invertDictVarVals(cityNames)
     numCities = len(cityNames)
     # cities are indexed 1-48
     unshuffledCities = np.arange(numCities) + 1
@@ -91,12 +98,14 @@ def initializeGame(numTeamMembers, difficultyLevel, numStartingCards, debugLevel
     # Initialize all city disease markers to 0. 
     emptyCity = {'blue': 0, 'yellow': 0, 'black': 0, 'red': 0}
     cityDiseaseCubes = {}
-    for iCITY in xrange(1,numCities+1):
+    #for iCITY in xrange(1,numCities+1):
+    for iCITY in range(1,numCities+1):
         cityDiseaseCubes[iCITY] = copy.deepcopy(emptyCity)
 
     # Initialize all cities with 0 research stations 
     cityResearchStations = {}
-    for iCITY in xrange(1,numCities+1):
+    #for iCITY in xrange(1,numCities+1):
+    for iCITY in range(1,numCities+1):
         cityResearchStations[iCITY] = 0
     # Add a research station to Atlanta
     cityResearchStations[cityNames['Atlanta']] = 1
@@ -146,7 +155,8 @@ def initializeGame(numTeamMembers, difficultyLevel, numStartingCards, debugLevel
     ################################################################
     # List team roles
     teamRoles = {0:'Dispatcher',1:'OperationsExpert',2:'Scientist',3:'QuarantineSpecialist',4:'Medic',5:'Researcher',6:'ContingencyPlanner'}
-    indexedRoles = dict((v,k) for k,v in teamRoles.iteritems())
+    #indexedRoles = dict((v,k) for k,v in teamRoles.iteritems())
+    indexedRoles = invertDictVarVals(teamRoles)
     # List team colors
     teamColors = {'Dispatcher':'#551a8b','OperationsExpert':'#32cd32','Scientist':'#FFFFFF','QuarantineSpecialist':'#228b22','Medic':'#ffa500','Researcher':'#614126','ContingencyPlanner':'#00a4a4'}
 
@@ -186,7 +196,8 @@ def initializeGame(numTeamMembers, difficultyLevel, numStartingCards, debugLevel
     ## DEFINE EVENT CARDS
     ################################################################
     eventCardNames = {'Airlift':49,'GovernmentGrant':50,'OneQuietNight':51,'ResilientPopulation':52,'Forecast':53}
-    indexedEventCards = dict((v,k) for k,v in eventCardNames.iteritems())
+    #indexedEventCards = dict((v,k) for k,v in eventCardNames.iteritems())
+    indexedEventCards = invertDictVarVals(eventCardNames)
     eventCardMask = np.zeros(54)
     eventCardMask[49:] = 1
     eventCardMask = eventCardMask > 0
@@ -195,7 +206,8 @@ def initializeGame(numTeamMembers, difficultyLevel, numStartingCards, debugLevel
     ## DEFINE PLAYER DECK BEFORE ADDING EPIDEMIC CARDS
     ################################################################
     # Create the player card deck
-    allPlayerCards = dict(indexedCities, **indexedEventCards)
+    #allPlayerCards = dict(indexedCities, **indexedEventCards)
+    allPlayerCards = {**indexedCities, **indexedEventCards}
     indexedActionEventPlayerCards = {}
     for key in range(len(indexedCities)+1):
         indexedActionEventPlayerCards[key] = 'Action'
@@ -203,13 +215,14 @@ def initializeGame(numTeamMembers, difficultyLevel, numStartingCards, debugLevel
         indexedActionEventPlayerCards[key] = 'Event'
 
     # Create all cards in the player card deck
-    unshuffledPlayerCards = np.array(allPlayerCards.keys())
+    #unshuffledPlayerCards = np.array(allPlayerCards.keys())
+    unshuffledPlayerCards = np.array(list(allPlayerCards.keys()))
     # (Epidemics labeled 0s -- all other appPlayerCards indexed 1-53)
     allPlayerCards[0] = 'Epidemic'
 
-    # Define all player cards. 
+    # Define all player cards. Should contain no epidemics (i.e. 0s)
     playerCardDeck = np.copy(unshuffledPlayerCards)
-    # Sequence them.
+    # Randomly sequence them by shuffling.
     np.random.shuffle(playerCardDeck)
 
     ################################################################
@@ -365,7 +378,8 @@ def initializeGame(numTeamMembers, difficultyLevel, numStartingCards, debugLevel
             quarantinedCities[iQC] = True
 
     actionTypes = {'passTurn':1,'move':2, 'directFlight':3, 'charterFlight':4, 'shuttle':5, 'treat':6, 'build':7, 'cure':8, 'give':9, 'take':10, 'remove':11, 'airlift':12,'governmentGrant':13,'oneQuietNight':14,'resilientPopulation':15,'forecast':16,'reclaim':17,'discard':18,'drawPlayerCards':19,'infect':20}
-    indexedActions = dict((v,k) for k,v in actionTypes.iteritems())
+    #indexedActions = dict((v,k) for k,v in actionTypes.iteritems())
+    indexedActions = invertDictVarVals(actionTypes)
 
     # Iniitalize end game states
     playerCardsExhausted = False
@@ -388,7 +402,8 @@ def initializeGame(numTeamMembers, difficultyLevel, numStartingCards, debugLevel
     mechanicsSeq = gameMechanicsSeqsDict['action1']
 
     forecastTypes = {'simpleForecast':0, 'randomForecast':1}
-    indexedForecastTypes = dict((v,k) for k,v in forecastTypes.iteritems())
+    #indexedForecastTypes = dict((v,k) for k,v in forecastTypes.iteritems())
+    indexedForecastTypes = invertDictVarVals(forecastTypes)
 
     forecastType = 0
     playForecastOnEpidemic = True
@@ -805,16 +820,20 @@ def showActionOptions(actionEvents,isv,gm):
         if ( gm['indexedActionEventPlayerCards'][iCH] == 'Action' ):
             if gm['indexedDiseaseColors'][gm['diseaseIndexes'][iCH]] == 'blue':
                 if (gm['debugLevel'] >= 3):
-                    print printcolors.BLUE + gm['indexedActionEventPlayerCards'][iCH] + ': (' + gm['allPlayerCards'][iCH] + '-' + gm['indexedDiseaseColors'][gm['diseaseIndexes'][iCH]] + ')' + printcolors.ENDC
+                    # [[PYTHON3]]
+                    print(printcolors.BLUE + gm['indexedActionEventPlayerCards'][iCH] + ': (' + gm['allPlayerCards'][iCH] + '-' + gm['indexedDiseaseColors'][gm['diseaseIndexes'][iCH]] + ')' + printcolors.ENDC)
             if gm['indexedDiseaseColors'][gm['diseaseIndexes'][iCH]] == 'yellow':
                 if (gm['debugLevel'] >= 3):
-                    print printcolors.YELLOW + gm['indexedActionEventPlayerCards'][iCH] + ': (' + gm['allPlayerCards'][iCH] + '-' + gm['indexedDiseaseColors'][gm['diseaseIndexes'][iCH]] + ')' + printcolors.ENDC
+                    # [[PYTHON3]]
+                    print(printcolors.YELLOW + gm['indexedActionEventPlayerCards'][iCH] + ': (' + gm['allPlayerCards'][iCH] + '-' + gm['indexedDiseaseColors'][gm['diseaseIndexes'][iCH]] + ')' + printcolors.ENDC)
             if gm['indexedDiseaseColors'][gm['diseaseIndexes'][iCH]] == 'black':
                 if (gm['debugLevel'] >= 3):
-                    print printcolors.GRAY + gm['indexedActionEventPlayerCards'][iCH] + ': (' + gm['allPlayerCards'][iCH] + '-' + gm['indexedDiseaseColors'][gm['diseaseIndexes'][iCH]] + ')' + printcolors.ENDC
+                    # [[PYTHON3]]
+                    print(printcolors.GRAY + gm['indexedActionEventPlayerCards'][iCH] + ': (' + gm['allPlayerCards'][iCH] + '-' + gm['indexedDiseaseColors'][gm['diseaseIndexes'][iCH]] + ')' + printcolors.ENDC)
             if gm['indexedDiseaseColors'][gm['diseaseIndexes'][iCH]] == 'red':
                 if (gm['debugLevel'] >= 3):
-                    print printcolors.RED + gm['indexedActionEventPlayerCards'][iCH] + ': (' + gm['allPlayerCards'][iCH] + '-' + gm['indexedDiseaseColors'][gm['diseaseIndexes'][iCH]] + ')' + printcolors.ENDC
+                    # [[PYTHON3]]
+                    print(printcolors.RED + gm['indexedActionEventPlayerCards'][iCH] + ': (' + gm['allPlayerCards'][iCH] + '-' + gm['indexedDiseaseColors'][gm['diseaseIndexes'][iCH]] + ')' + printcolors.ENDC)
         else:
             if (gm['debugLevel'] >= 3):
                 print(gm['indexedActionEventPlayerCards'][iCH] + ': (' + gm['allPlayerCards'][iCH] + ')' )
@@ -1217,7 +1236,8 @@ def featureVectorizeFromArray(isv, iKL, debugLevel=5):
     return isvVec, numDVec, fVecNames
 
 def featureVectorizeFromDict(isv, iKL):
-    tmpKeyVals = isv[iKL].items()
+    #tmpKeyVals = isv[iKL].items()
+    tmpKeyVals = list(isv[iKL].items())
     isvVec = np.zeros(len(tmpKeyVals),'float')
     numDVec = len(tmpKeyVals)
     fVecNames = []
@@ -1244,14 +1264,19 @@ def vectorizeInstantStateVector(isv, gm):
     for iKL in isvKeyList:
         #print iKL, isv[iKL]
         if isinstance(isv[iKL],bool):
+            #print(iKL + ' is bool')
             isvVec, numDVec, fVecNames = featureVectorizeFromBool(isv, iKL)
-        if isinstance(isv[iKL],int):
+        if ( isinstance(isv[iKL],int) | isinstance(isv[iKL],np.int64) ):
+            #print(iKL + ' is int')
             isvVec, numDVec, fVecNames = featureVectorizeFromInt(isv, iKL)
         elif isinstance(isv[iKL], np.ndarray):
+            #print(iKL + ' is array')
             isvVec, numDVec, fVecNames = featureVectorizeFromArray(isv, iKL, gm['debugLevel'])
         elif isinstance(isv[iKL], dict):
+            #print(iKL + ' is dict')
             isvVec, numDVec, fVecNames = featureVectorizeFromDict(isv, iKL)
         elif isinstance(isv[iKL], list):
+            #print(iKL + ' is list')
             isvVec, numDVec, fVecNames = featureVectorizeFromList(isv, iKL, gm)
         else:
             if (gm['debugLevel'] >= 1):
